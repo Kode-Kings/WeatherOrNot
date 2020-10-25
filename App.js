@@ -7,7 +7,7 @@ import { API_KEY } from "./utils/WeatherAPIKeys";
 export default class App extends Component{
 
   state = {
-    isLoading: false,
+    isLoading: true,
     temperature: 0,
     location: null,
     weatherCondition: null,
@@ -17,7 +17,6 @@ export default class App extends Component{
   componentDidMount(){
     navigator.geolocation.getCurrentPosition(
       position => {
-        console.log(API_KEY)
         this.fetchWeather(position.coords.latitude,position.coords.longitude)
       },
       error => {
@@ -34,12 +33,18 @@ export default class App extends Component{
     )
     .then(res=>res.json())
     .then(json=> {
-      console.log(json)
+      this.setState({
+        location: json.name,
+        weatherCondition: json.weather[0].description,
+        temperature: json.main.temp,
+        isLoading: false
+      })
+      // console.log(json.weather[0].description)
     })
   }
 
   render(){
-    const { isLoading } = this.state;
+    const { isLoading, temperature, weatherCondition, location } = this.state;
     return (
       <View style={styles.container}>
         { isLoading ? (
@@ -47,7 +52,7 @@ export default class App extends Component{
             <Text>Fetching...</Text>
           </View>
         ) : (
-          <Weather />
+          <Weather weather={weatherCondition} temperature={temperature} location={location}/>
         )}
         <StatusBar style="auto" />
       </View>
