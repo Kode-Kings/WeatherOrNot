@@ -10,7 +10,7 @@ const Weather = (props) => {
           <View style={styles.headerContainer}>
             <MaterialCommunityIcons size={48} name="weather-sunny" color={'#fff'} />
             <Text style={styles.tempText}>{temperature}˚</Text>
-            <Text style={styles.tempText}>{location}</Text>
+            <Text style={styles.tempText}>{location.suburb}, {location.city}</Text>
           </View>
           <View style={styles.bodyContainer}>
             <Text style={styles.title}>{weather}</Text>

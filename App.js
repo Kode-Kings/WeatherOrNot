@@ -2,14 +2,14 @@ import { StatusBar } from 'expo-status-bar';
 import React, { Component } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import Weather from "./components/Weather";
-import { API_KEY } from "./utils/WeatherAPIKeys";
+import { WEATHER_API_KEY } from "./utils/WeatherAPIKeys";
 
 export default class App extends Component{
 
   state = {
     isLoading: true,
     temperature: 0,
-    location: null,
+    location: {suburb: '', city: ''},
     weatherCondition: null,
     error: null
   }
@@ -18,6 +18,7 @@ export default class App extends Component{
     const geo = navigator.geolocation
     navigator.geolocation.getCurrentPosition(
       position => {
+        this.fetchLocation(position.coords.latitude,position.coords.longitude)
         this.fetchWeather(position.coords.latitude,position.coords.longitude)
       },
       error => {
@@ -28,18 +29,29 @@ export default class App extends Component{
     )
   }
 
-  fetchLocation = () => {
-
-  }
-
-  fetchWeather = (lat = 25, lon = 25) => {
+  fetchLocation = (lat = 40.76, lon = -73.82) => {
     fetch(
-      `http://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&APPID=${API_KEY}&units=metric`
+      `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}`
     )
     .then(res=>res.json())
     .then(json=> {
       this.setState({
-        location: json.name,
+        location: {
+          suburb: json.address.suburb,
+          city: json.address.city
+        }
+      })
+      // console.log(this.state.location)
+      })
+  }
+
+  fetchWeather = (lat = 40.76, lon = -73.82) => {
+    fetch(
+      `http://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&APPID=${WEATHER_API_KEY}&units=metric`
+    )
+    .then(res=>res.json())
+    .then(json=> {
+      this.setState({
         weatherCondition: json.weather[0].description,
         temperature: json.main.temp,
         isLoading: false
