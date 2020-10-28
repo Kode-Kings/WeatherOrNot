@@ -1,10 +1,11 @@
 import React, { Component } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, ImageBackground } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 const Weather = (props) => {
     const {weather, temperature, location} = props
     return (
+      <ImageBackground source={require('../assets/backgrounds/sunny.jpg')} style={styles.bg}>
         <View style={styles.weatherContainer}>
           <View style={styles.headerContainer}>
             <MaterialCommunityIcons size={48} name="weather-sunny" color={'#fff'} />
@@ -13,17 +14,21 @@ const Weather = (props) => {
           </View>
           <View style={styles.bodyContainer}>
             <Text style={styles.title}>{weather}</Text>
-            <Text style={styles.subtitle}>It hurts my eyes!</Text>
           </View>
         </View>
+      </ImageBackground>
       );
 
 }
 
 const styles = StyleSheet.create({
+    bg: {
+      width:"100%",
+      height: "100%"
+    },
     weatherContainer: {
       flex: 1,
-      backgroundColor: '#f7b733'
+      width: "100%"
     },
     headerContainer: {
       flex: 1,
