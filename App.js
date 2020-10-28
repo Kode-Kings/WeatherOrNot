@@ -2,22 +2,23 @@ import { StatusBar } from 'expo-status-bar';
 import React, { Component } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import Weather from "./components/Weather";
-import { API_KEY } from "./utils/WeatherAPIKeys";
+import { WEATHER_API_KEY } from "./utils/WeatherAPIKeys";
 
 export default class App extends Component{
 
   state = {
-    isLoading: false,
+    isLoading: true,
     temperature: 0,
-    location: null,
+    location: {suburb: '', city: ''},
     weatherCondition: null,
     error: null
   }
 
-  componentDidMount(){
+  componentDidMount = () => {
+    const geo = navigator.geolocation
     navigator.geolocation.getCurrentPosition(
       position => {
-        console.log(API_KEY)
+        this.fetchLocation(position.coords.latitude,position.coords.longitude)
         this.fetchWeather(position.coords.latitude,position.coords.longitude)
       },
       error => {
@@ -28,18 +29,39 @@ export default class App extends Component{
     )
   }
 
-  fetchWeather(lat = 25, lon = 25){
+  fetchLocation = (lat = 40.76, lon = -73.82) => {
     fetch(
-      `http://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&APPID=${API_KEY}&units=metric`
+      `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}`
     )
     .then(res=>res.json())
     .then(json=> {
-      console.log(json)
+      this.setState({
+        location: {
+          suburb: json.address.suburb,
+          city: json.address.city
+        }
+      })
+      // console.log(this.state.location)
+      })
+  }
+
+  fetchWeather = (lat = 40.76, lon = -73.82) => {
+    fetch(
+      `http://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&APPID=${WEATHER_API_KEY}&units=metric`
+    )
+    .then(res=>res.json())
+    .then(json=> {
+      this.setState({
+        weatherCondition: json.weather[0].description,
+        temperature: json.main.temp,
+        isLoading: false
+      })
+      // console.log(json.weather[0].description)
     })
   }
 
   render(){
-    const { isLoading } = this.state;
+    const { isLoading, temperature, weatherCondition, location } = this.state;
     return (
       <View style={styles.container}>
         { isLoading ? (
@@ -47,7 +69,7 @@ export default class App extends Component{
             <Text>Fetching...</Text>
           </View>
         ) : (
-          <Weather />
+          <Weather weather={weatherCondition} temperature={temperature} location={location}/>
         )}
         <StatusBar style="auto" />
       </View>
