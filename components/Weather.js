@@ -1,15 +1,30 @@
 import React, { Component } from 'react';
 import { View, Text, StyleSheet, ImageBackground } from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+
 
 const Weather = (props) => {
-    const {weather, temperature, location} = props
+    const {weather, temperature, location, main} = props
+    const backgroundSource = (main) => {
+      switch(main) {
+        case 'Rain' || 'Drizzle' || 'Thunderstorm' :
+          return require('../assets/backgrounds/rainy.jpg')
+        case 'Snow' :
+          return require('../assets/backgrounds/snowy.jpg')
+
+        case 'Clouds' :
+          return require('../assets/backgrounds/cloudy.jpg')
+
+        case 'Clear' :
+          return require('../assets/backgrounds/sunny.jpg')
+        default :
+          return require('../assets/backgrounds/sunny.jpg')
+      }
+    }
     return (
-      <ImageBackground source={require('../assets/backgrounds/sunny.jpg')} style={styles.bg}>
+      <ImageBackground source={backgroundSource(main)} style={styles.bg}>
         <View style={styles.weatherContainer}>
           <View style={styles.headerContainer}>
-            <MaterialCommunityIcons size={48} name="weather-sunny" color={'#fff'} />
-            <Text style={styles.tempText}>{temperature}˚</Text>
+            <Text style={styles.tempText}>{temperature}˚F</Text>
             <Text style={styles.tempText}>{location.suburb}, {location.city}</Text>
           </View>
           <View style={styles.bodyContainer}>

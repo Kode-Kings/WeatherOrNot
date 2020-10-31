@@ -21,7 +21,8 @@ export default class App extends Component{
     isLoading: true,
     temperature: 0,
     location: {suburb: '', city: ''},
-    weatherCondition: null,
+    weatherCondition: '',
+    mainWeather: '',
     error: null,
     notificationToken: null
   }
@@ -32,7 +33,7 @@ export default class App extends Component{
   //     console.log("registered");
   //     token => this.setState({notificationToken: token});
   //   }
-      
+
   //   )
   // }
 
@@ -78,13 +79,21 @@ export default class App extends Component{
     )
     .then(res=>res.json())
     .then(json=> {
+      // console.log(json)
+      const celsius = json.main.temp
+      const fahrenheit = Math.round((celsius * 9/5) + 32)
       this.setState({
         weatherCondition: json.weather[0].description,
-        temperature: json.main.temp,
-        isLoading: false
+        temperature: fahrenheit,
+        isLoading: false,
+        mainWeather: json.weather[0].main
       })
-      // console.log(json.weather[0].description)
     })
+    .then(()=>{
+      this.sendNotification(this.state.notificationToken,'testing',
+      this.state.weatherCondition)
+    }
+    )
   }
 
   registerForPushNotificationsAsync = async () => {
@@ -97,6 +106,7 @@ export default class App extends Component{
         finalStatus = status;
       }
       if (finalStatus !== 'granted') {
+        //modify to show on screen and give user option to allow permission
         alert('Failed to get push token for push notification!');
         return;
       }
@@ -105,7 +115,7 @@ export default class App extends Component{
     } else {
       alert('Must use physical device for Push Notifications');
     }
-  
+
     if (Platform.OS === 'android') {
       Notifications.setNotificationChannelAsync('default', {
         name: 'default',
@@ -114,7 +124,7 @@ export default class App extends Component{
         lightColor: '#FF231F7C',
       });
     }
-  
+
     return token;
   }
 
@@ -142,7 +152,7 @@ export default class App extends Component{
     return trigger
   }
 
-  sendNotification = async (token, title, messages, trigger = {seconds: 1}) => {
+  sendNotification = async (token, title, messages, trigger = {seconds: 1, repeats:false}) => {
     await Notifications.scheduleNotificationAsync({
       content: {
         title: title,
@@ -177,7 +187,7 @@ export default class App extends Component{
   }
 
   render(){
-    const { isLoading, temperature, weatherCondition, location } = this.state;
+    const { isLoading, temperature, weatherCondition, mainWeather, location } = this.state;
     return (
       <View style={styles.container}>
         { isLoading ? (
@@ -186,8 +196,10 @@ export default class App extends Component{
           </View>
         ) : (
           <View>
-            {/* <Weather weather={weatherCondition} temperature={temperature} location={location}/> */}
-            <TouchableOpacity style={styles.button} onPress={this.handlePress}><Text>Notification</Text></TouchableOpacity>
+            <Weather weather={weatherCondition} main={mainWeather} temperature={temperature} location={location}/>
+
+
+            {/* <TouchableOpacity style={styles.button} onPress={this.handlePress}><Text>Notification</Text></TouchableOpacity> */}
           </View>
         )}
         <StatusBar style="auto" />
