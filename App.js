@@ -38,8 +38,8 @@ export default class App extends Component{
 
   componentDidMount = () => {
     //register token from push notification
-    // this.registerForPushNotificationsAsync()
-    // .then(token => this.setState({notificationToken: token}))
+    this.registerForPushNotificationsAsync()
+    .then(token => this.setState({notificationToken: token}))
 
     //get location
     const geo = navigator.geolocation
