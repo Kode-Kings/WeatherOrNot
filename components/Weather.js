@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { View, Text, StyleSheet, ImageBackground } from 'react-native';
+import { View, Text, StyleSheet, ImageBackground, TouchableOpacity} from 'react-native';
 
 
 const Weather = (props) => {
@@ -16,7 +16,20 @@ const Weather = (props) => {
 
         case 'Clear' :
           return require('../assets/backgrounds/sunny.jpg')
-        default :
+
+        case 'nClear' :
+          return require('../assets/backgrounds/nclear.jpeg')
+
+        case 'nClouds' :
+          return require('../assets/backgrounds/ncloudy.jpg')
+
+        case 'nSnowy' :
+          return require('../assets/backgrounds/nsnowy.jpg')
+
+        case 'nRainy' :
+          return require('../assets/backgrounds/nrainy.jpeg')
+
+          default :
           return require('../assets/backgrounds/sunny.jpg')
       }
     }
@@ -24,11 +37,17 @@ const Weather = (props) => {
       <ImageBackground source={backgroundSource(main)} style={styles.bg}>
         <View style={styles.weatherContainer}>
           <View style={styles.headerContainer}>
-            <Text style={styles.tempText}>{temperature}˚F</Text>
-            <Text style={styles.tempText}>{location.suburb}, {location.city}</Text>
+            <Text style={{...styles.text, fontSize: 38}}>{weather}</Text>
+            <Text style={{...styles.text}}>{temperature}˚F</Text>
+            <Text style={{...styles.text, fontSize: 25}}>{location.suburb}, {location.city}</Text>
           </View>
-          <View style={styles.bodyContainer}>
-            <Text style={styles.title}>{weather}</Text>
+          <View style={styles.notifContainer}>
+            <Text style={{...styles.text, fontSize: 20}}>Set up your notifications settings here!</Text>
+            <TouchableOpacity>
+              <Text>
+                Testing
+              </Text>
+            </TouchableOpacity>
           </View>
         </View>
       </ImageBackground>
@@ -38,37 +57,32 @@ const Weather = (props) => {
 
 const styles = StyleSheet.create({
     bg: {
-      width:"100%",
-      height: "100%"
+      flex: 1
     },
     weatherContainer: {
       flex: 1,
-      width: "100%"
+      flexDirection: 'column',
     },
     headerContainer: {
       flex: 1,
       alignItems: 'center',
       justifyContent: 'center'
     },
-    tempText: {
-      fontSize: 48,
-      color: '#fff'
+    text: {
+      fontFamily: 'Noteworthy',
+      fontSize: 60,
+      fontWeight: 'bold',
+      color: '#fff',
+      textShadowColor: '#000',
+      textShadowRadius: 7,
     },
-    bodyContainer: {
+    notifContainer: {
       flex: 2,
       alignItems: 'flex-start',
       justifyContent: 'flex-end',
       paddingLeft: 25,
       marginBottom: 40
     },
-    title: {
-      fontSize: 48,
-      color: '#fff'
-    },
-    subtitle: {
-      fontSize: 24,
-      color: '#fff'
-    }
   });
 
 export default Weather;

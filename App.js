@@ -2,7 +2,7 @@ import { StatusBar } from 'expo-status-bar';
 import React, { Component } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
 import Weather from "./components/Weather";
-import { WEATHER_API_KEY } from "./utils/WeatherAPIKeys";
+import { WEATHER_API_KEY} from "./utils/APIKeys";
 import * as Notifications from 'expo-notifications';
 import * as Permissions from 'expo-permissions';
 import Constants from 'expo-constants';
@@ -39,6 +39,7 @@ export default class App extends Component{
 
   componentDidMount = () => {
     //register token from push notification
+    Notifications.cancelAllScheduledNotificationsAsync()
     this.registerForPushNotificationsAsync()
     .then(token => this.setState({notificationToken: token}))
 
@@ -69,7 +70,6 @@ export default class App extends Component{
           city: json.address.city
         }
       })
-      // console.log(this.state.location)
       })
   }
 
@@ -79,19 +79,34 @@ export default class App extends Component{
     )
     .then(res=>res.json())
     .then(json=> {
-      // console.log(json)
       const celsius = json.main.temp
       const fahrenheit = Math.round((celsius * 9/5) + 32)
+      let currentHour = new Date().getHours()
+      let main = 'Clear'
+      if (currentHour >= 18 || currentHour <= 6) {
+        main = 'n' + json.weather[0].main
+      }
+      //capitalizing letter of description
+      let desc = json.weather[0].description.split('')
+      let newDesc = desc.map((letter, i) => {
+        if (i===0 || desc[i-1] === ' ') {
+          return letter.toUpperCase()
+        } else {
+          return letter
+        }
+      }).join('')
+      //capitalizing letter of description
+
       this.setState({
-        weatherCondition: json.weather[0].description,
+        weatherCondition: newDesc,
         temperature: fahrenheit,
         isLoading: false,
-        mainWeather: json.weather[0].main
+        mainWeather: main
       })
     })
     .then(()=>{
       this.sendNotification(this.state.notificationToken,'testing',
-      this.state.weatherCondition)
+      this.state.weatherCondition, {seconds: 1, repeats:false})
     }
     )
   }
@@ -159,7 +174,7 @@ export default class App extends Component{
         body: messages,
         data: { data: 'data goes here'},
       },
-      trigger: trigger
+      trigger
     })
     // push notification to specific token
     // const message = {
@@ -195,12 +210,7 @@ export default class App extends Component{
             <Text>Fetching...</Text>
           </View>
         ) : (
-          <View>
             <Weather weather={weatherCondition} main={mainWeather} temperature={temperature} location={location}/>
-
-
-            {/* <TouchableOpacity style={styles.button} onPress={this.handlePress}><Text>Notification</Text></TouchableOpacity> */}
-          </View>
         )}
         <StatusBar style="auto" />
       </View>
@@ -210,14 +220,8 @@ export default class App extends Component{
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  button: {
-    alignItems: 'center',
-    backgroundColor: '#DDDDDD',
-    padding: 20
+    backgroundColor: '#000',
+    height: '100%',
+    width: '100%',
   },
 });
