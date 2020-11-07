@@ -1,9 +1,40 @@
-import React, { Component } from 'react';
-import { View, Text, StyleSheet, ImageBackground, TouchableOpacity} from 'react-native';
+import React, { useState } from 'react';
+import { View, Switch, Text, StyleSheet, ImageBackground, Button} from 'react-native';
+import DateTimePicker from '@react-native-community/datetimepicker'
 
 
 const Weather = (props) => {
-    const {weather, temperature, location, main} = props
+    const {weather, temperature, location, main, toggleNotif,  notifStatus, schedule} = props
+    const [show, setShow] = useState(false)
+    const [date, setDate] = useState(new Date())
+    const [selectedTime, setTime] = useState([])
+
+    const pickerChange = (e, date) => {
+      setDate(date)
+      let hour = date.getHours()
+      let minute = date.getMinutes()
+      setTime([hour, minute])
+    }
+    const handleSaveTime = () => {
+      console.log(selectedTime)
+      schedule()
+      setShow(!show)
+    }
+
+    const handleClick = () => {
+      if (notifStatus === false) {
+        toggleNotif()
+        setShow(!show)
+      }
+      else if(show===true && notifStatus === true) {
+        toggleNotif()
+        setShow(!show)
+      }
+      else if(notifStatus === true && show === false) {
+        toggleNotif()
+      }
+    }
+
     const backgroundSource = (main) => {
       switch(main) {
         case 'Rain' || 'Drizzle' || 'Thunderstorm' :
@@ -42,13 +73,30 @@ const Weather = (props) => {
             <Text style={{...styles.text, fontSize: 25}}>{location.suburb}, {location.city}</Text>
           </View>
           <View style={styles.notifContainer}>
-            <Text style={{...styles.text, fontSize: 20}}>Set up your notifications settings here!</Text>
-            <TouchableOpacity>
-              <Text>
-                Testing
-              </Text>
-            </TouchableOpacity>
+
+            <Text style={{...styles.text, fontSize: 20}}>
+              Daily Notifications {notifStatus?'Enabled':'Disabled'}
+            </Text>
+
+            <Switch
+              trackColor={{false: '#767577', true: '#81b0ff'}}
+              onValueChange={handleClick}
+              value={notifStatus}
+              />
           </View>
+          {
+            show ? <Button onPress={handleSaveTime} title=" Save"/>
+            :
+            undefined
+          }
+          {show && (<DateTimePicker
+              style={styles.pickerContainer}
+              value={date}
+              mode={'time'}
+              is24Hour={true}
+              display="default"
+              onChange={pickerChange}
+            />)}
         </View>
       </ImageBackground>
       );
@@ -83,6 +131,9 @@ const styles = StyleSheet.create({
       paddingLeft: 25,
       marginBottom: 40
     },
+    pickerContainer: {
+      backgroundColor: '#fff'
+    }
   });
 
 export default Weather;

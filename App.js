@@ -1,6 +1,6 @@
 import { StatusBar } from 'expo-status-bar';
-import React, { Component } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
+import React, { Component, createRef } from 'react';
+import { StyleSheet, Text, TextInput, View, Button,TouchableOpacity } from 'react-native';
 import Weather from "./components/Weather";
 import { WEATHER_API_KEY} from "./utils/APIKeys";
 import * as Notifications from 'expo-notifications';
@@ -16,35 +16,52 @@ Notifications.setNotificationHandler({
 })
 
 export default class App extends Component{
-
-  state = {
-    isLoading: true,
-    temperature: 0,
-    location: {suburb: '', city: ''},
-    weatherCondition: '',
-    mainWeather: '',
-    error: null,
-    notificationToken: null
+  constructor() {
+    super()
+    this.state = {
+      isLoading: true,
+      temperature: 0,
+      location: {suburb: '', city: ''},
+      weatherCondition: '',
+      mainWeather: '',
+      notificationEnabled: false,
+      error: null,
+      notificationToken: null,
+      recaptchaVerifier: createRef(null),
+      phoneNumber: null,
+      verificationId: null,
+      verificationCode: null,
+      messages: null
+    }
+  }
+  toggleNotif = async () => {
+    if (this.state.notificationEnabled) {
+      this.setState({
+        notificationEnabled: false
+      })
+    }
+    else {
+      this.registerForPushNotificationsAsync()
+      this.setState({
+      notificationEnabled: true
+    })
+    }
   }
 
-  // useEffect = () => {
-  //   console.log("starting toregistered");
-  //   this.registerForPushNotificationsAsync().then(res=>{
-  //     console.log("registered");
-  //     token => this.setState({notificationToken: token});
-  //   }
+  scheduleTime = () => {
+    console.log('function to make a request to cloud functions')
+  }
 
-  //   )
-  // }
-
-  componentDidMount = () => {
+  componentDidMount = async () => {
     //register token from push notification
-    Notifications.cancelAllScheduledNotificationsAsync()
-    this.registerForPushNotificationsAsync()
-    .then(token => this.setState({notificationToken: token}))
-
-    //get location
-    const geo = navigator.geolocation
+    // Notifications.cancelAllScheduledNotificationsAsync()
+    if (Constants.isDevice) {
+      const { status: existingStatus } = await Permissions.getAsync(Permissions.NOTIFICATIONS)
+      if (existingStatus === 'granted') {
+        let token = (await Notifications.getExpoPushTokenAsync()).data;
+        this.setState({notificationEnabled: true, notificationToken: token})
+      }
+    }
     navigator.geolocation.getCurrentPosition(
       position => {
         this.fetchLocation(position.coords.latitude,position.coords.longitude)
@@ -104,17 +121,17 @@ export default class App extends Component{
         mainWeather: main
       })
     })
-    .then(()=>{
-      this.sendNotification(this.state.notificationToken,'testing',
-      this.state.weatherCondition, {seconds: 1, repeats:false})
-    }
-    )
+    // .then(()=>{
+    //   this.sendNotification(this.state.notificationToken,'testing',
+    //   this.state.weatherCondition, {seconds: 1, repeats:false})
+    // }
+    // )
   }
 
   registerForPushNotificationsAsync = async () => {
     let token;
     if (Constants.isDevice) {
-      const { status: existingStatus } = await Permissions.getAsync(Permissions.NOTIFICATIONS);
+      const { status: existingStatus } = await Permissions.getAsync(Permissions.NOTIFICATIONS)
       let finalStatus = existingStatus;
       if (existingStatus !== 'granted') {
         const { status } = await Permissions.askAsync(Permissions.NOTIFICATIONS);
@@ -126,48 +143,29 @@ export default class App extends Component{
         return;
       }
       token = (await Notifications.getExpoPushTokenAsync()).data;
-      console.log(token);
-    } else {
-      alert('Must use physical device for Push Notifications');
-    }
+      this.setState({
+        notificationToken: token
+      })
 
-    if (Platform.OS === 'android') {
-      Notifications.setNotificationChannelAsync('default', {
-        name: 'default',
-        importance: Notifications.AndroidImportance.MAX,
-        vibrationPattern: [0, 250, 250, 250],
-        lightColor: '#FF231F7C',
-      });
+    } else {
+      alert('You must give this application permission to send notifications for push notifications to be enabled.');
     }
 
     return token;
   }
 
-  handlePress = () =>{
-    const date = new Date()
-    // console.log(date)
-    // date.setMinutes(14)
-    // date.setSeconds(0)
-    // console.log(this.setTimeTrigger(date, false))
-    // const trigger = this.setTimeTrigger(date,false)
-    const trigger = this.setDelayTrigger(1)
-    this.sendNotification(this.state.notificationToken, "Hi", "notification here", trigger)
+  sendFirstNotification = async (token, trigger) => {
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title: 'Testing',
+        body: 'Retrieve current weather?',
+        data: { data: 'data goes here'}
+      },
+      trigger
+    })
   }
 
-  //creates a trigger to be used to schedule notification after a certain amount of delay
-  setDelayTrigger = (delay) => {
-    const trigger = {seconds: delay}
-    return trigger
-  }
-
-  //creates a trigger to be used to schedule notification at the specific time of the day(repeats optional; default: false)
-  setTimeTrigger = (time, repeat = false) =>{
-    const now = new Date();
-    const trigger = new Date(now.getFullYear(),now.getMonth(),now.getDate(),time.getHours(),time.getMinutes(),time.getSeconds());
-    return trigger
-  }
-
-  sendNotification = async (token, title, messages, trigger = {seconds: 1, repeats:false}) => {
+  sendDailyNotification = async (token, title, messages, trigger) => {
     await Notifications.scheduleNotificationAsync({
       content: {
         title: title,
@@ -176,42 +174,22 @@ export default class App extends Component{
       },
       trigger
     })
-    // push notification to specific token
-    // const message = {
-    //   to: token,
-    //   sound: 'default',
-    //   title: title,
-    //   body: messages,
-    //   data: { data: 'data goes here'},
-    // };
-
-    // //use aync delay function to delay for time provided in arguments in ms
-    // const delay = ms => new Promise(res=> setTimeout(res,ms))
-
-    // // await delay(5000)
-
-    // await fetch('https://exp.host/--/api/v2/push/send', {
-    //   method: 'POST',
-    //   headers: {
-    //     Accept: 'application/json',
-    //     'Accept-encoding': 'gzip, deflate',
-    //     'Content-Type': 'application/json',
-    //   },
-    //   body: JSON.stringify(message),
-    // }).then(res => console.log("sent"));
   }
 
   render(){
     const { isLoading, temperature, weatherCondition, mainWeather, location } = this.state;
     return (
       <View style={styles.container}>
-        { isLoading ? (
-          <View>
-            <Text>Fetching...</Text>
-          </View>
-        ) : (
-            <Weather weather={weatherCondition} main={mainWeather} temperature={temperature} location={location}/>
-        )}
+
+            <Weather
+              weather={weatherCondition}
+              main={mainWeather}
+              temperature={temperature}
+              location={location}
+              notifStatus={this.state.notificationEnabled}
+              toggleNotif={this.toggleNotif}
+              schedule={this.scheduleTime}/>
+
         <StatusBar style="auto" />
       </View>
     );
@@ -220,7 +198,7 @@ export default class App extends Component{
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#000',
+    backgroundColor: '#fff',
     height: '100%',
     width: '100%',
   },
