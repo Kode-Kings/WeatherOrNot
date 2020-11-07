@@ -1,21 +1,67 @@
 import { StatusBar } from 'expo-status-bar';
-import React, { Component } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import React, { Component, createRef } from 'react';
+import { StyleSheet, Text, TextInput, View, Button,TouchableOpacity } from 'react-native';
 import Weather from "./components/Weather";
-import { WEATHER_API_KEY } from "./utils/WeatherAPIKeys";
+import { WEATHER_API_KEY} from "./utils/APIKeys";
+import * as Notifications from 'expo-notifications';
+import * as Permissions from 'expo-permissions';
+import Constants from 'expo-constants';
+
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: false,
+    shouldSetBadge: false,
+  }),
+})
 
 export default class App extends Component{
-
-  state = {
-    isLoading: true,
-    temperature: 0,
-    location: {suburb: '', city: ''},
-    weatherCondition: null,
-    error: null
+  constructor() {
+    super()
+    this.state = {
+      isLoading: true,
+      temperature: 0,
+      location: {suburb: '', city: ''},
+      weatherCondition: '',
+      mainWeather: '',
+      notificationEnabled: false,
+      error: null,
+      notificationToken: null,
+      recaptchaVerifier: createRef(null),
+      phoneNumber: null,
+      verificationId: null,
+      verificationCode: null,
+      messages: null
+    }
+  }
+  toggleNotif = async () => {
+    if (this.state.notificationEnabled) {
+      this.setState({
+        notificationEnabled: false
+      })
+    }
+    else {
+      this.registerForPushNotificationsAsync()
+      this.setState({
+      notificationEnabled: true
+    })
+    }
   }
 
-  componentDidMount = () => {
-    const geo = navigator.geolocation
+  scheduleTime = () => {
+    console.log('function to make a request to cloud functions')
+  }
+
+  componentDidMount = async () => {
+    //register token from push notification
+    // Notifications.cancelAllScheduledNotificationsAsync()
+    if (Constants.isDevice) {
+      const { status: existingStatus } = await Permissions.getAsync(Permissions.NOTIFICATIONS)
+      if (existingStatus === 'granted') {
+        let token = (await Notifications.getExpoPushTokenAsync()).data;
+        this.setState({notificationEnabled: true, notificationToken: token})
+      }
+    }
     navigator.geolocation.getCurrentPosition(
       position => {
         this.fetchLocation(position.coords.latitude,position.coords.longitude)
@@ -41,7 +87,6 @@ export default class App extends Component{
           city: json.address.city
         }
       })
-      // console.log(this.state.location)
       })
   }
 
@@ -51,26 +96,100 @@ export default class App extends Component{
     )
     .then(res=>res.json())
     .then(json=> {
+      const celsius = json.main.temp
+      const fahrenheit = Math.round((celsius * 9/5) + 32)
+      let currentHour = new Date().getHours()
+      let main = 'Clear'
+      if (currentHour >= 18 || currentHour <= 6) {
+        main = 'n' + json.weather[0].main
+      }
+      //capitalizing letter of description
+      let desc = json.weather[0].description.split('')
+      let newDesc = desc.map((letter, i) => {
+        if (i===0 || desc[i-1] === ' ') {
+          return letter.toUpperCase()
+        } else {
+          return letter
+        }
+      }).join('')
+      //capitalizing letter of description
+
       this.setState({
-        weatherCondition: json.weather[0].description,
-        temperature: json.main.temp,
-        isLoading: false
+        weatherCondition: newDesc,
+        temperature: fahrenheit,
+        isLoading: false,
+        mainWeather: main
       })
-      // console.log(json.weather[0].description)
+    })
+    // .then(()=>{
+    //   this.sendNotification(this.state.notificationToken,'testing',
+    //   this.state.weatherCondition, {seconds: 1, repeats:false})
+    // }
+    // )
+  }
+
+  registerForPushNotificationsAsync = async () => {
+    let token;
+    if (Constants.isDevice) {
+      const { status: existingStatus } = await Permissions.getAsync(Permissions.NOTIFICATIONS)
+      let finalStatus = existingStatus;
+      if (existingStatus !== 'granted') {
+        const { status } = await Permissions.askAsync(Permissions.NOTIFICATIONS);
+        finalStatus = status;
+      }
+      if (finalStatus !== 'granted') {
+        //modify to show on screen and give user option to allow permission
+        alert('Failed to get push token for push notification!');
+        return;
+      }
+      token = (await Notifications.getExpoPushTokenAsync()).data;
+      this.setState({
+        notificationToken: token
+      })
+
+    } else {
+      alert('You must give this application permission to send notifications for push notifications to be enabled.');
+    }
+
+    return token;
+  }
+
+  sendFirstNotification = async (token, trigger) => {
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title: 'Testing',
+        body: 'Retrieve current weather?',
+        data: { data: 'data goes here'}
+      },
+      trigger
+    })
+  }
+
+  sendDailyNotification = async (token, title, messages, trigger) => {
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title: title,
+        body: messages,
+        data: { data: 'data goes here'},
+      },
+      trigger
     })
   }
 
   render(){
-    const { isLoading, temperature, weatherCondition, location } = this.state;
+    const { isLoading, temperature, weatherCondition, mainWeather, location } = this.state;
     return (
       <View style={styles.container}>
-        { isLoading ? (
-          <View>
-            <Text>Fetching...</Text>
-          </View>
-        ) : (
-          <Weather weather={weatherCondition} temperature={temperature} location={location}/>
-        )}
+
+            <Weather
+              weather={weatherCondition}
+              main={mainWeather}
+              temperature={temperature}
+              location={location}
+              notifStatus={this.state.notificationEnabled}
+              toggleNotif={this.toggleNotif}
+              schedule={this.scheduleTime}/>
+
         <StatusBar style="auto" />
       </View>
     );
@@ -79,9 +198,8 @@ export default class App extends Component{
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
     backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
+    height: '100%',
+    width: '100%',
   },
 });
