@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { View, Switch, Text, StyleSheet, ImageBackground, Button} from 'react-native';
+import { View, ScrollView, Switch, Text, StyleSheet, ImageBackground, Button} from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker'
 
 
 const Weather = (props) => {
-    const {weather, temperature, location, main, toggleNotif,  notifStatus, schedule} = props
+    const {weather, temperature, location, main, toggleNotif,  notifStatus, token, scheduleNotification} = props
     const [show, setShow] = useState(false)
     const [date, setDate] = useState(new Date())
     const [selectedTime, setTime] = useState([])
@@ -16,8 +16,7 @@ const Weather = (props) => {
       setTime([hour, minute])
     }
     const handleSaveTime = () => {
-      console.log(selectedTime)
-      schedule()
+      scheduleNotification(token, {hour: selectedTime[0], minute: selectedTime[1], repeats: true})
       setShow(!show)
     }
 
@@ -72,17 +71,24 @@ const Weather = (props) => {
             <Text style={{...styles.text}}>{temperature}˚F</Text>
             <Text style={{...styles.text, fontSize: 25}}>{location.suburb}, {location.city}</Text>
           </View>
+
+          <View style={styles.forecastContainer}>
+            <ScrollView bounces={false} style={styles.hourlyContainer}>
+            <Text style={styles.text}>Placeholder for in depth weather data</Text>
+            </ScrollView>
+
+          </View>
           <View style={styles.notifContainer}>
 
-            <Text style={{...styles.text, fontSize: 20}}>
-              Daily Notifications {notifStatus?'Enabled':'Disabled'}
-            </Text>
-
             <Switch
+              style={{marginRight: '5%'}}
               trackColor={{false: '#767577', true: '#81b0ff'}}
               onValueChange={handleClick}
               value={notifStatus}
-              />
+            />
+            <Text style={{...styles.text, fontSize: 20}}>
+              Daily Reminder {notifStatus?'Enabled':'Disabled'}
+            </Text>
           </View>
           {
             show ? <Button onPress={handleSaveTime} title=" Save"/>
@@ -105,16 +111,37 @@ const Weather = (props) => {
 
 const styles = StyleSheet.create({
     bg: {
-      flex: 1
+        height: '100%',
+        width: '100%',
     },
     weatherContainer: {
-      flex: 1,
+      display:'flex',
       flexDirection: 'column',
+      height: '100%'
+    },
+    forecastContainer: {
+      flex: 4,
+      flexDirection: 'column'
+    },
+    hourlyContainer: {
+      display: 'flex',
+      flexDirection: 'row',
+      height: '10%'
     },
     headerContainer: {
-      flex: 1,
+      flex: 2,
       alignItems: 'center',
       justifyContent: 'center'
+    },
+    notifContainer: {
+      marginBottom: '10%',
+      display: 'flex',
+      flexDirection:'row',
+      justifyContent: 'center',
+    },
+    pickerContainer: {
+      backgroundColor: '#fff',
+      position: 'absolute'
     },
     text: {
       fontFamily: 'Noteworthy',
@@ -124,16 +151,6 @@ const styles = StyleSheet.create({
       textShadowColor: '#000',
       textShadowRadius: 7,
     },
-    notifContainer: {
-      flex: 2,
-      alignItems: 'flex-start',
-      justifyContent: 'flex-end',
-      paddingLeft: 25,
-      marginBottom: 40
-    },
-    pickerContainer: {
-      backgroundColor: '#fff'
-    }
   });
 
 export default Weather;
