@@ -1,6 +1,6 @@
 import { StatusBar } from 'expo-status-bar';
-import React, { Component, createRef } from 'react';
-import { StyleSheet, Text, TextInput, View, Button,TouchableOpacity } from 'react-native';
+import React, { Component} from 'react';
+import { StyleSheet,View } from 'react-native';
 import Weather from "./components/Weather";
 import { WEATHER_API_KEY} from "./utils/APIKeys";
 import * as Notifications from 'expo-notifications';
@@ -27,15 +27,12 @@ export default class App extends Component{
       notificationEnabled: false,
       error: null,
       notificationToken: null,
-      recaptchaVerifier: createRef(null),
-      phoneNumber: null,
-      verificationId: null,
-      verificationCode: null,
-      messages: null
     }
   }
   toggleNotif = async () => {
     if (this.state.notificationEnabled) {
+      console.log('deleting all scheduled @@@@@@')
+      Notifications.cancelAllScheduledNotificationsAsync()
       this.setState({
         notificationEnabled: false
       })
@@ -48,9 +45,7 @@ export default class App extends Component{
     }
   }
 
-  scheduleTime = () => {
-    console.log('function to make a request to cloud functions')
-  }
+
 
   componentDidMount = async () => {
     //register token from push notification
@@ -154,23 +149,11 @@ export default class App extends Component{
     return token;
   }
 
-  sendFirstNotification = async (token, trigger) => {
+  sendDailyNotification = async (token, trigger) => {
     await Notifications.scheduleNotificationAsync({
       content: {
-        title: 'Testing',
-        body: 'Retrieve current weather?',
-        data: { data: 'data goes here'}
-      },
-      trigger
-    })
-  }
-
-  sendDailyNotification = async (token, title, messages, trigger) => {
-    await Notifications.scheduleNotificationAsync({
-      content: {
-        title: title,
-        body: messages,
-        data: { data: 'data goes here'},
+        title: 'Daily Weather Check Reminder',
+        body: 'Make sure to check the weather! :^)'
       },
       trigger
     })
@@ -188,7 +171,9 @@ export default class App extends Component{
               location={location}
               notifStatus={this.state.notificationEnabled}
               toggleNotif={this.toggleNotif}
-              schedule={this.scheduleTime}/>
+              token={this.state.notificationToken}
+              scheduleNotification={this.sendDailyNotification}
+              />
 
         <StatusBar style="auto" />
       </View>
