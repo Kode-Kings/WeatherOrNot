@@ -2,7 +2,7 @@ import { StatusBar } from 'expo-status-bar';
 import React, { Component} from 'react';
 import { StyleSheet,View } from 'react-native';
 import Weather from "./components/Weather";
-import { WEATHER_API_KEY} from "./utils/APIKeys";
+import { WEATHER_API_KEY} from "./utils/APIKey";
 import * as Notifications from 'expo-notifications';
 import * as Permissions from 'expo-permissions';
 import Constants from 'expo-constants';
