@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, ScrollView, Switch, Text, StyleSheet, ImageBackground, Button} from 'react-native';
+import { View, ScrollView, Switch, Text, StyleSheet, ImageBackground, TouchableOpacity} from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker'
 
 
@@ -73,9 +73,14 @@ const Weather = (props) => {
           </View>
 
           <View style={styles.forecastContainer}>
-            <ScrollView bounces={false} style={styles.hourlyContainer}>
-            <Text style={styles.text}>Placeholder for in depth weather data</Text>
-            </ScrollView>
+            <View style={styles.hourlyContainer}>
+              <ScrollView bounces={false} horizontal={true}
+
+                showsHorizontalScrollIndicator={false}
+                showsVerticalScrollIndicator={false} style={styles.hourlyContainer}>
+                <Text style={styles.text}>Placeholder for in depth weather data</Text>
+              </ScrollView>
+            </View>
 
           </View>
           <View style={styles.notifContainer}>
@@ -90,12 +95,16 @@ const Weather = (props) => {
               Daily Reminder {notifStatus?'Enabled':'Disabled'}
             </Text>
           </View>
-          {
-            show ? <Button onPress={handleSaveTime} title=" Save"/>
-            :
-            undefined
-          }
-          {show && (<DateTimePicker
+        </View>
+
+            {
+              show ? <TouchableOpacity style={styles.saveButton}onPress={handleSaveTime}>
+                <Text style={{fontSize: 20}}>SAVE</Text>
+                    </TouchableOpacity>
+              :
+              undefined
+            }
+            {show && (<DateTimePicker
               style={styles.pickerContainer}
               value={date}
               mode={'time'}
@@ -103,8 +112,9 @@ const Weather = (props) => {
               display="default"
               onChange={pickerChange}
             />)}
-        </View>
+
       </ImageBackground>
+
       );
 
 }
@@ -115,18 +125,16 @@ const styles = StyleSheet.create({
         width: '100%',
     },
     weatherContainer: {
+      position: 'absolute',
+      top: 0,
       display:'flex',
       flexDirection: 'column',
-      height: '100%'
+      height: '100%',
+
     },
     forecastContainer: {
       flex: 4,
       flexDirection: 'column'
-    },
-    hourlyContainer: {
-      display: 'flex',
-      flexDirection: 'row',
-      height: '10%'
     },
     headerContainer: {
       flex: 2,
@@ -139,9 +147,21 @@ const styles = StyleSheet.create({
       flexDirection:'row',
       justifyContent: 'center',
     },
+    saveButton: {
+      alignSelf: 'center',
+      alignItems: 'center',
+      borderRadius: 10,
+      position:'relative',
+      width: '20%',
+      top: '73%',
+      backgroundColor: "#fff"
+
+    },
     pickerContainer: {
+      position: 'relative',
+      top: '74%',
       backgroundColor: '#fff',
-      position: 'absolute'
+      zIndex: 200
     },
     text: {
       fontFamily: 'Noteworthy',
