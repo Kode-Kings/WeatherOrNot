@@ -53,10 +53,10 @@ const Weather = (props) => {
         case 'nClouds' :
           return require('../assets/backgrounds/ncloudy.jpg')
 
-        case 'nSnowy' :
+        case 'nSnow' :
           return require('../assets/backgrounds/nsnowy.jpg')
 
-        case 'nRainy' :
+        case 'nRain' :
           return require('../assets/backgrounds/nrainy.jpeg')
 
           default :

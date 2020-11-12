@@ -87,19 +87,21 @@ export default class App extends Component{
 
   fetchWeather = (lat = 40.76, lon = -73.82) => {
     fetch(
-      `http://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&APPID=${WEATHER_API_KEY}&units=metric`
+      `http://api.openweathermap.org/data/2.5/onecall?lat=${lat}&lon=${lon}&exclude=minutely,alerts&APPID=${WEATHER_API_KEY}&units=metric`
     )
     .then(res=>res.json())
     .then(json=> {
-      const celsius = json.main.temp
+      let weatherData = {}
+      console.log('TESTING',json.hourly[0], json.current)
+      const celsius = json.current.temp
       const fahrenheit = Math.round((celsius * 9/5) + 32)
       let currentHour = new Date().getHours()
       let main = 'Clear'
       if (currentHour >= 18 || currentHour <= 6) {
-        main = 'n' + json.weather[0].main
+        main = 'n' + json.current.weather[0].main
       }
       //capitalizing letter of description
-      let desc = json.weather[0].description.split('')
+      let desc = json.current.weather[0].description.split('')
       let newDesc = desc.map((letter, i) => {
         if (i===0 || desc[i-1] === ' ') {
           return letter.toUpperCase()
