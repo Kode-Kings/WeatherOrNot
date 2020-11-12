@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
-import { View, ScrollView, Switch, Text, StyleSheet, ImageBackground, TouchableOpacity} from 'react-native';
+import { View, Image, ScrollView, Switch, Text, StyleSheet, ImageBackground, TouchableOpacity} from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker'
 
 
 const Weather = (props) => {
-    const {weather, temperature, location, main, toggleNotif,  notifStatus, token, scheduleNotification} = props
+    const {weather, location, main, toggleNotif,  notifStatus, token, scheduleNotification} = props
     const [show, setShow] = useState(false)
     const [date, setDate] = useState(new Date())
-    const [selectedTime, setTime] = useState([])
+    const [selectedTime, setTime] = useState([6,0])
 
     const pickerChange = (e, date) => {
       setDate(date)
@@ -56,7 +56,7 @@ const Weather = (props) => {
         case 'nSnow' :
           return require('../assets/backgrounds/nsnowy.jpg')
 
-        case 'nRain' :
+        case 'nRain' || 'nDrizzle' || 'nThunderstorm' :
           return require('../assets/backgrounds/nrainy.jpeg')
 
           default :
@@ -67,19 +67,61 @@ const Weather = (props) => {
       <ImageBackground source={backgroundSource(main)} style={styles.bg}>
         <View style={styles.weatherContainer}>
           <View style={styles.headerContainer}>
-            <Text style={{...styles.text, fontSize: 38}}>{weather}</Text>
-            <Text style={{...styles.text}}>{temperature}˚F</Text>
+            <Text style={{...styles.text, fontSize: 38}}>{weather.current.desc}</Text>
+            <Text style={{...styles.text}}>{weather.current.temperature}˚F</Text>
             <Text style={{...styles.text, fontSize: 25}}>{location.suburb}, {location.city}</Text>
           </View>
 
           <View style={styles.forecastContainer}>
-            <View style={styles.hourlyContainer}>
+            <View style={{flex: 1}}>
               <ScrollView bounces={false} horizontal={true}
 
                 showsHorizontalScrollIndicator={false}
-                showsVerticalScrollIndicator={false} style={styles.hourlyContainer}>
-                <Text style={styles.text}>Placeholder for in depth weather data</Text>
+                showsVerticalScrollIndicator={false}>
+                {weather.hourly.map((e)=> {
+                  return(
+                    <View key={e.hour} style={styles.hourlyContainer}>
+                      <Text style={{fontSize:16}}>{e.hour}</Text>
+                      {e.pop > 20 ? <Text>{e.pop}%</Text> : <Text></Text>}
+                      <Image
+                        style={{width: 66,
+                          height: 58}}
+                        source={{
+                        uri: e.icon
+                      }}/>
+                    </View>
+                  )
+                })}
               </ScrollView>
+
+            </View>
+            <View style={{flex:3}}>
+              <ScrollView
+              showsHorizontalScrollIndicator={false}
+              showsVerticalScrollIndicator={false}
+              >
+              {weather.daily.map((e) => {
+                return (
+                  <View key={e.date} style={styles.dailyContainer}>
+                    <View style={{display:'flex', flexDirection:'row', width: '70%',
+                    alignItems:'center',justifyContent:'space-between'}}>
+                      <Text style={{fontSize: 20,marginLeft:'5%'}}>{e.date}</Text>
+                      <Image
+                        style={{width: 50,
+                          height: 50}}
+                        source={{
+                        uri: e.icon}}/>
+                    </View>
+                    <View style={{display:'flex', flexDirection:'row', width: '20%',justifyContent:'space-between',marginLeft: '5%'}}>
+                      <Text style={{fontSize: 20}}>{e.max}˚</Text>
+                      <Text style={{fontSize: 20}}>{e.min}˚</Text>
+                    </View>
+
+                  </View>
+                )
+              })}
+              </ScrollView>
+
             </View>
 
           </View>
@@ -127,30 +169,55 @@ const styles = StyleSheet.create({
     weatherContainer: {
       position: 'absolute',
       top: 0,
+      left: 0,
+      right: 0,
       display:'flex',
       flexDirection: 'column',
       height: '100%',
+      alignItems: 'center'
 
     },
     forecastContainer: {
-      flex: 4,
+      flex: 3,
       flexDirection: 'column'
+    },
+    hourlyContainer: {
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: 'rgba(168,218,220,0.5)',
+      borderColor: '#000',
+      borderBottomWidth: 2,
+      borderTopWidth: 2
+    },
+    dailyContainer: {
+      display: 'flex',
+      flexDirection: 'row',
+      width: '100%',
+      paddingTop:'5%',
+      paddingBottom: '5%',
+      alignItems: 'center',
+      backgroundColor: 'rgba(255,198,255, 0.4)'
     },
     headerContainer: {
       flex: 2,
       alignItems: 'center',
-      justifyContent: 'center'
+      justifyContent: 'center',
     },
     notifContainer: {
-      marginBottom: '10%',
-      display: 'flex',
-      flexDirection:'row',
+      margin: '5%',
+      flex: .3,
+      flexDirection: 'row',
+      alignItems: 'center',
       justifyContent: 'center',
     },
     saveButton: {
       alignSelf: 'center',
       alignItems: 'center',
       borderRadius: 10,
+      borderWidth: 2,
+      borderColor: '#000',
       position:'relative',
       width: '20%',
       top: '73%',
@@ -164,7 +231,7 @@ const styles = StyleSheet.create({
       zIndex: 200
     },
     text: {
-      fontFamily: 'Noteworthy',
+      fontFamily: 'Times New Roman',
       fontSize: 60,
       fontWeight: 'bold',
       color: '#fff',

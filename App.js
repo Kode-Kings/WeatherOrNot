@@ -21,10 +21,14 @@ export default class App extends Component{
     this.state = {
       isLoading: true,
       location: {
-        suburb: '', 
+        suburb: '',
         city: ''
       },
-      weatherData: {},
+      weatherData: {
+        current: {},
+        daily: [],
+        hourly: []
+      },
       mainWeather: '',
       notificationEnabled: false,
       error: null,
@@ -46,9 +50,6 @@ export default class App extends Component{
     })
     }
   }
-
-
-
   componentDidMount = async () => {
     //register token from push notification
     // Notifications.cancelAllScheduledNotificationsAsync()
@@ -99,16 +100,16 @@ export default class App extends Component{
       // console.log(json.daily[0])
 
       let currentHour = new Date().getHours()
-      let main = 'Clear'
+      let main = json.current.weather[0].main
       if (currentHour >= 18 || currentHour <= 6) {
         main = 'n' + json.current.weather[0].main
       }
 
       //Current Weather
       const celsius = json.current.temp
-      
+
       weatherData.current.temperature = this.convertCtoF(celsius)
-      
+
       //capitalizing letter of description
       let desc = json.current.weather[0].description.split('')
       let newDesc = desc.map((letter, i) => {
@@ -118,7 +119,7 @@ export default class App extends Component{
           return letter
         }
       }).join('')
-      weatherData.current.desc = desc
+      weatherData.current.desc = newDesc
 
       // Hourly - 24 hours
       // hour, main weather
@@ -129,7 +130,7 @@ export default class App extends Component{
         newDate.setTime(json.hourly[i].dt*1000)
         // conver hour to string
         const weatherhour = newDate.getHours();
-        const convertedHour = ''
+        let convertedHour = ''
         if(weatherhour == 0){
           convertedHour = '12 AM'
         }else if(weatherhour > 0 && weatherhour < 12){
@@ -141,7 +142,8 @@ export default class App extends Component{
         }
 
         hourlyWeather.hour = convertedHour
-        hourlyWeather.main = json.hourly[i].weather[0].main
+        hourlyWeather.icon = `http://openweathermap.org/img/wn/${json.hourly[i].weather[0].icon}.png`
+        hourlyWeather.pop = Math.floor(json.hourly[i].pop * 100)
         weatherData.hourly.push(hourlyWeather)
         // console.log(hourlyWeather)
       }
@@ -149,19 +151,19 @@ export default class App extends Component{
       // Daily - 7days
       // Date, main weather, max temp, min temp
       // 11/11(Mon), Mon, 11/11
-      const dailyWeather = {}
-      
+
       for (let i=0; i<7; i++){
-        const result = ''
-        const resultDate = new Date()
+        let dailyWeather = {}
+        let result = ''
+        let resultDate = new Date()
         resultDate.setTime(json.daily[i].dt*1000)
 
         result = (resultDate.getMonth() + 1).toString() + "/"
         result += resultDate.getDate().toString()
 
-        const weatherDay = new Date().getDay()
-        // console.log(weatherDay)
-        const convertedDay = '';
+        let weatherDay = resultDate.getDay()
+
+        let convertedDay = '';
         switch(weatherDay){
           case 0:
             convertedDay = 'Sunday'
@@ -187,26 +189,22 @@ export default class App extends Component{
         }
 
         result += '(' + convertedDay + ')'
-        
+
         dailyWeather.date = result
-        dailyWeather.main = json.daily[i].weather[0].main
+        dailyWeather.icon =
+        `http://openweathermap.org/img/wn/${json.daily[i].weather[0].icon}.png`
         dailyWeather.max = this.convertCtoF(json.daily[i].temp.max)
         dailyWeather.min = this.convertCtoF(json.daily[i].temp.min)
         weatherData.daily.push(dailyWeather)
       }
-      
-      
+
+
       this.setState({
         weatherData: weatherData,
         isLoading: false,
         mainWeather: main
       })
     })
-    // .then(()=>{
-    //   this.sendNotification(this.state.notificationToken,'testing',
-    //   this.state.weatherCondition, {seconds: 1, repeats:false})
-    // }
-    // )
   }
 
   registerForPushNotificationsAsync = async () => {
