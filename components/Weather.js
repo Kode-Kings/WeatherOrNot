@@ -5,9 +5,10 @@ import DateTimePicker from '@react-native-community/datetimepicker'
 
 const Weather = (props) => {
     const {weather, location, main, toggleNotif,  notifStatus, token, scheduleNotification} = props
+    const firstDate = new Date()
     const [show, setShow] = useState(false)
     const [date, setDate] = useState(new Date())
-    const [selectedTime, setTime] = useState([6,0])
+    const [selectedTime, setTime] = useState([firstDate.getHours(),firstDate.getMinutes()])
 
     const pickerChange = (e, date) => {
       setDate(date)

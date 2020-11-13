@@ -37,11 +37,11 @@ export default class App extends Component{
   }
   toggleNotif = async () => {
     if (this.state.notificationEnabled) {
-      console.log('deleting all scheduled @@@@@@')
       Notifications.cancelAllScheduledNotificationsAsync()
       this.setState({
         notificationEnabled: false
       })
+      alert('Notifications have been disabled along with your preferences.')
     }
     else {
       this.registerForPushNotificationsAsync()
@@ -218,7 +218,7 @@ export default class App extends Component{
       }
       if (finalStatus !== 'granted') {
         //modify to show on screen and give user option to allow permission
-        alert('Failed to get push token for push notification!');
+        alert('Failed to get permissions to send push notifications!');
         return;
       }
       token = (await Notifications.getExpoPushTokenAsync()).data;
@@ -226,8 +226,9 @@ export default class App extends Component{
         notificationToken: token
       })
 
-    } else {
-      alert('You must give this application permission to send notifications for push notifications to be enabled.');
+    }
+    else {
+      alert('You must be on a cellular device to enable daily reminders to check the weather through push notifications.');
     }
 
     return token;
