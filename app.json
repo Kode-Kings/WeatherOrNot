@@ -1,14 +1,14 @@
 {
   "expo": {
-    "name": "weather-or-not",
-    "slug": "weather-or-not",
+    "name": "Weather-Or-Not",
+    "slug": "Weather-Or-Not",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/wonIcon.png",
     "splash": {
-      "image": "./assets/splash.png",
+      "image": "./assets/wonIcon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#FEF9B0"
     },
     "android":{
       "useNextNotificationsApi": true
@@ -23,7 +23,7 @@
       "supportsTablet": true
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/wonIcon.png"
     }
   }
 }
