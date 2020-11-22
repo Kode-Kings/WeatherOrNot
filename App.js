@@ -1,6 +1,6 @@
 import { StatusBar } from 'expo-status-bar';
 import React, { Component} from 'react';
-import { StyleSheet,View } from 'react-native';
+import { StyleSheet,View, Text } from 'react-native';
 import Weather from "./components/Weather";
 import { WEATHER_API_KEY} from "./utils/APIKey";
 import * as Notifications from 'expo-notifications';
@@ -10,7 +10,7 @@ import Constants from 'expo-constants';
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowAlert: true,
-    shouldPlaySound: false,
+    shouldPlaySound: true,
     shouldSetBadge: false,
   }),
 })
@@ -243,7 +243,7 @@ export default class App extends Component{
     await Notifications.scheduleNotificationAsync({
       content: {
         title: 'Daily Weather Check Reminder',
-        body: 'Make sure to check the weather! :^)'
+        body: 'Make sure to check the weather!'
       },
       trigger
     })
@@ -253,16 +253,17 @@ export default class App extends Component{
     const { isLoading, weatherData, mainWeather, location } = this.state;
     return (
       <View style={styles.container}>
-
-            <Weather
-              weather={weatherData}
-              main={mainWeather}
-              location={location}
-              notifStatus={this.state.notificationEnabled}
-              toggleNotif={this.toggleNotif}
-              token={this.state.notificationToken}
-              scheduleNotification={this.sendDailyNotification}
-              />
+        {isLoading? <Text>Fetching Weather Data</Text>:
+        <Weather
+        weather={weatherData}
+        main={mainWeather}
+        location={location}
+        notifStatus={this.state.notificationEnabled}
+        toggleNotif={this.toggleNotif}
+        token={this.state.notificationToken}
+        scheduleNotification={this.sendDailyNotification}
+        />
+        }
 
         <StatusBar style="auto" />
       </View>
@@ -272,8 +273,10 @@ export default class App extends Component{
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#fff',
+    backgroundColor: "#FEF9B0",
     height: '100%',
     width: '100%',
+    alignItems: 'center',
+    justifyContent: 'center'
   },
 });
